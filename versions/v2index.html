@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TheSellForBuy Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body {margin:0;font-family:'Roboto',sans-serif;background-color:#f5f0e6;color:#111;transition:0.3s;}
+body.dark {background-color:#121212;color:#fff;}
+header {position:fixed;top:0;left:0;right:0;height:60px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;background-color:inherit;box-shadow:0 2px 5px rgba(0,0,0,0.2);z-index:1000;}
+header .title {font-weight:500;font-size:22px;letter-spacing:1px;}
+header .controls {display:flex;align-items:center;gap:10px;}
+#clock {font-weight:bold;font-size:16px;}
+button, select {cursor:pointer;}
+#darkModeToggle {font-size:18px;background:none;border:none;transition:transform 0.2s;}
+#darkModeToggle:hover {transform:rotate(20deg);}
+select {padding:4px 8px;border-radius:6px;border:1px solid #111;background-color:#fff;color:#111;}
+body.dark select {border:1px solid #fff;color:#fff;background-color:#1c1c1c;}
+body.dark select option {background-color:#1c1c1c;color:#fff;}
+
+/* ===== Galeri Grid ===== */
+.gallery {margin-top:80px;display:grid;gap:20px;padding:20px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+.embed {background-color:#1c1c1c;color:#fff;border-radius:12px;overflow:hidden;cursor:pointer;text-align:center;padding:10px;transition:0.3s;}
+body.light .embed {background-color:#e0e0e0;color:#111;}
+.embed:hover {transform:scale(1.02);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.embed .images img {width:100%;height:200px;object-fit:cover;border-radius:6px;transition:0.2s;}
+.embed .images img:hover {transform:scale(1.05);}
+.embed .title {font-weight:500;font-size:16px;margin:5px 0;}
+.embed .desc {font-size:14px;line-height:1.4;margin-bottom:5px;}
+.embed .price {font-weight:bold;color:#62b357;font-size:16px;}
+
+/* ===== Modal ===== */
+.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:2000;padding-top:60px;overflow:auto;}
+.modal-inner {display:flex;justify-content:center;align-items:center;gap:30px;flex-wrap:wrap;padding:20px;min-height:100%;}
+.modal-left img {max-width:400px;max-height:70vh;border-radius:10px;display:block;margin:auto;}
+.modal-right {display:flex;flex-direction:column;gap:10px;color:#fff;max-width:400px;}
+.modal-right h2 {margin:0;font-size:22px;}
+.modal-right .desc {font-size:16px;line-height:1.4;}
+.modal-right .price {font-weight:bold;color:#62b357;font-size:18px;}
+.modal-right .info {font-size:14px;}
+#modalClose {position:absolute;top:20px;right:35px;color:#fff;font-size:40px;font-weight:bold;cursor:pointer;transition:0.3s;}
+#modalClose:hover {color:#ff4444;}
+.modal::-webkit-scrollbar {width:6px;}
+.modal::-webkit-scrollbar-thumb {background-color:rgba(255,255,255,0.3);border-radius:3px;}
+.modal::-webkit-scrollbar-track {background:transparent;}
+
+/* ===== Footer ===== */
+footer {display:flex;justify-content:space-between;flex-wrap:wrap;background-color:#1f1f1f;color:#aaa;padding:20px;gap:10px;margin-top:20px;}
+body.light footer {background-color:#dcdcdc;color:#333;}
+.footer-right {display:flex;align-items:center;gap:15px;}
+.footer-right a {color:#f8f8f8;text-decoration:none;font-weight:500;display:flex;align-items:center;gap:6px;transition:0.3s;}
+.footer-right a:hover {color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body class="dark">
+
+<header>
+<div class="title">TheSellForBuy</div>
+<div class="controls">
+<div id="clock">00:00:00</div>
+<button id="darkModeToggle">🌙</button>
+<select id="currencySelect">
+<option value="usd">$ USD</option>
+<option value="eur">€ EUR</option>
+<option value="try">₺ TRY</option>
+</select>
+<select id="langSelect">
+<option value="tr">🇹🇷 TR</option>
+<option value="en">🇬🇧 EN</option>
+<option value="es">🇪🇸 ES</option>
+<option value="de">🇩🇪 DE</option>
+</select>
+</div>
+</header>
+
+<div class="gallery" id="gallery"></div>
+
+<div id="modal" class="modal">
+<span id="modalClose">&times;</span>
+<div class="modal-inner">
+<div class="modal-left"><img id="modalImg"></div>
+<div class="modal-right">
+<h2 id="modalName"></h2>
+<div id="modalDesc"></div>
+<div class="price" id="modalPrice"></div>
+<div class="info" id="modalBrand"></div>
+<div class="info" id="modalSeller"></div>
+<div class="info" id="modalDate"></div>
+<div class="info" id="modalDelivery"></div>
+<div class="info" id="modalDeliveryDays"></div>
+</div>
+</div>
+</div>
+
+<footer>
+<div>TheSellForBuy Demo Site</div>
+<div class="footer-right">
+<a href="https://discord.com/users/USERNAME" target="_blank">Discord</a>
+<a href="https://github.com/aozdev" target="_blank">GitHub</a>
+</div>
+</footer>
+
+<script>
+// ===== Saat =====
+function updateClock(){
+  const now=new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const m=String(now.getMinutes()).padStart(2,'0');
+  const s=String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent=`${h}:${m}:${s}`;
+}
+setInterval(updateClock,1000);updateClock();
+
+// ===== Dark/Light Mode =====
+document.getElementById('darkModeToggle').addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
+  document.getElementById('darkModeToggle').textContent=document.body.classList.contains('dark')?'🌙':'☀️';
+});
+
+// ===== Ürünler =====
+const products = [
+{name:'Mont',title:'Columbia',desc:{tr:'Columbia Winter Jacket 2025',en:'Columbia Winter Jacket 2025',es:'Chaqueta de invierno Columbia 2025',de:'Columbia Winterjacke 2025'},price:400,brand:'A Company',seller:'Seller 1',delivery:'Delivery 1',deliveryDays:5,images:['https://i.pinimg.com/1200x/da/82/39/da823902135ace17458359cb9cefc3cd.jpg']},
+{name:'T-shirt',title:'Gucci x Adidas Basic Logo',desc:{tr:'Gucci x Adidas Basic Logo T-shirt',en:'Gucci x Adidas Basic Logo T-shirt',es:'Camiseta básica Gucci x Adidas',de:'Gucci x Adidas Basic Logo T-Shirt'},price:120,brand:'B Company',seller:'Seller 2',delivery:'Delivery 2',deliveryDays:3,images:['https://i.pinimg.com/1200x/60/4a/89/604a89b1cc2929e1b8c60a798997429f.jpg']},
+{name:'Eşofman Altı',title:'PullBear',desc:{tr:'PullBear Comfort Sweatpants',en:'PullBear Comfort Sweatpants',es:'Pantalones de chándal PullBear',de:'PullBear Komfort-Sweatpants'},price:200,brand:'C Company',seller:'Seller 3',delivery:'Delivery 3',deliveryDays:4,images:['https://i.pinimg.com/736x/4d/d4/e1/4dd4e1ec0d31e6ea25b3dee27e73e321.jpg']},
+{name:'Ayakkabı',title:'Off-White',desc:{tr:'Off-White X Nike Air Jordan',en:'Off-White X Nike Air Jordan',es:'Off-White X Nike Air Jordan',de:'Off-White X Nike Air Jordan'},price:500,brand:'D Company',seller:'Seller 4',delivery:'Delivery 4',deliveryDays:7,images:['https://i.pinimg.com/1200x/3f/f9/a1/3ff9a161ea06665b97e5a70a4c225f34.jpg']},
+{name:'Airpods Case',title:'Bape',desc:{tr:'Bape FanArt Airpods Case',en:'Bape FanArt Airpods Case',es:'Funda Airpods Bape FanArt',de:'Bape FanArt Airpods-Hülle'},price:80,brand:'E Company',seller:'Seller 5',delivery:'Delivery 5',deliveryDays:2,images:['https://i.pinimg.com/736x/13/df/8b/13df8b9b95d8a81509752b6880ba6315.jpg']},
+{name:'Çanta',title:'Bape Bag',desc:{tr:'Bape Bag',en:'Bape Bag',es:'Bolsa Bape',de:'Bape Tasche'},price:150,brand:'F Company',seller:'Seller 6',delivery:'Delivery 6',deliveryDays:3,images:['https://i.pinimg.com/1200x/47/4e/5b/474e5b2a12e5e540f6e0501ae2c73d4d.jpg']},
+{name:'Hoodie',title:'Off-White Hoodie',desc:{tr:'Off-White "More Affordable" Hoodie',en:'Off-White "More Affordable" Hoodie',es:'Sudadera Off-White "Más Económica"',de:'Off-White "Günstiger" Hoodie'},price:300,brand:'G Company',seller:'Seller 7',delivery:'Delivery 7',deliveryDays:4,images:['https://i.pinimg.com/1200x/2a/93/99/2a93992cfe59a8ebb5ed36b7ce2d5ffc.jpg']},
+{name:'Mont',title:'Kansas Winter Coat',desc:{tr:'Kansas State Purple Half-Zip Starter Winter Coat 544',en:'Kansas State Purple Half-Zip Starter Winter Coat 544',es:'Abrigo de invierno Kansas State Purple Half-Zip 544',de:'Kansas State Purple Half-Zip Starter Winter Coat 544'},price:450,brand:'H Company',seller:'Seller 8',delivery:'Delivery 8',deliveryDays:5,images:['https://i.pinimg.com/1200x/96/db/a3/96dba341892d159322c5ddf6b0e19ad7.jpg']},
+{name:'Eldiven',title:'Fonem Gloves',desc:{tr:'Fonem Unisex Vanizalı Kesik Eldiven Fo 5525 Yeşil',en:'Fonem Unisex Cut Gloves Fo 5525 Green',es:'Guantes unisex Fonem Fo 5525 Verde',de:'Fonem Unisex Schnitt Handschuhe Fo 5525 Grün'},price:50,brand:'I Company',seller:'Seller 9',delivery:'Delivery 9',deliveryDays:2,images:['https://i.pinimg.com/736x/6e/72/78/6e72788e86b3480fac72be24c3475276.jpg']},
+{name:'Cüzdan',title:'LV Wallet',desc:{tr:'Louis Vuitton® Slender Wallet Eclipse',en:'Louis Vuitton® Slender Wallet Eclipse',es:'Cartera delgada Louis Vuitton® Eclipse',de:'Louis Vuitton® Schlanke Brieftasche Eclipse'},price:250,brand:'J Company',seller:'Seller 10',delivery:'Delivery 10',deliveryDays:3,images:['https://i.pinimg.com/1200x/14/85/13/1485135b97d8e5c53f356f52114e39ae.jpg']},
+{name:'Rolex',title:'Rolex Submariner',desc:{tr:'Rolex Basel one Submariner Date green 126610lv MK2 Starbucks',en:'Rolex Basel one Submariner Date green 126610lv MK2 Starbucks',es:'Rolex Basel one Submariner Date green 126610lv MK2 Starbucks',de:'Rolex Basel one Submariner Date green 126610lv MK2 Starbucks'},price:10000,brand:'K Company',seller:'Seller 11',delivery:'Delivery 11',deliveryDays:7,images:['https://i.pinimg.com/1200x/74/77/f8/7477f8290a15edcaaa7ca26c47b769e6.jpg']},
+{name:'Labubu',title:'Labubu Purple',desc:{tr:'Labubu Purple',en:'Labubu Purple',es:'Labubu Purple',de:'Labubu Purple'},price:90,brand:'L Company',seller:'Seller 12',delivery:'Delivery 12',deliveryDays:2,images:['https://i.pinimg.com/736x/67/be/e8/67bee845589d80853688780e1eb55bbe.jpg']}
+];
+
+// ===== Çeviri =====
+const translations = {
+  tr:{priceLabel:"Fiyat",brandLabel:"Marka",sellerLabel:"Satıcı",dateLabel:"Eklenme Tarihi",deliveryLabel:"Teslim Eden",deliveryDaysLabel:"Tahmini Teslim Süresi"},
+  en:{priceLabel:"Price",brandLabel:"Brand",sellerLabel:"Seller",dateLabel:"Added Date",deliveryLabel:"Delivery By",deliveryDaysLabel:"Estimated Delivery Days"},
+  es:{priceLabel:"Precio",brandLabel:"Marca",sellerLabel:"Vendedor",dateLabel:"Fecha Agregada",deliveryLabel:"Entregado Por",deliveryDaysLabel:"Días de Entrega Estimados"},
+  de:{priceLabel:"Preis",brandLabel:"Marke",sellerLabel:"Verkäufer",dateLabel:"Hinzugefügt Am",deliveryLabel:"Geliefert Von",deliveryDaysLabel:"Voraussichtliche Lieferzeit"}
+};
+
+// ===== Elemanlar =====
+const gallery=document.getElementById('gallery');
+const currencySelect=document.getElementById('currencySelect');
+const langSelect=document.getElementById('langSelect');
+const modal=document.getElementById('modal');
+const modalImg=document.getElementById('modalImg');
+const modalName=document.getElementById('modalName');
+const modalDesc=document.getElementById('modalDesc');
+const modalPrice=document.getElementById('modalPrice');
+const modalBrand=document.getElementById('modalBrand');
+const modalSeller=document.getElementById('modalSeller');
+const modalDate=document.getElementById('modalDate');
+const modalDelivery=document.getElementById('modalDelivery');
+const modalDeliveryDays=document.getElementById('modalDeliveryDays');
+const modalClose=document.getElementById('modalClose');
+
+// ===== Fiyat Formatlama =====
+function formatPrice(value,currency){
+  let locale='en-US';
+  let curr='USD';
+  if(currency==='try'){locale='tr-TR';curr='TRY';}
+  else if(currency==='eur'){locale='de-DE';curr='EUR';}
+  return new Intl.NumberFormat(locale,{style:'currency',currency:curr}).format(value);
+}
+
+// ===== Galeri Render =====
+function renderGallery(){
+  gallery.innerHTML='';
+  products.forEach((p,index)=>{
+    const embed=document.createElement('div'); embed.className='embed';
+    let imgHtml=''; for(let i=0;i<Math.min(p.images.length,5);i++){imgHtml+=`<img src="${p.images[i]}" data-index="${index}">`;}
+    embed.innerHTML=`<div class="images">${imgHtml}</div><div class="title">${p.title}</div><div class="desc"></div><div class="price"></div>`;
+    gallery.appendChild(embed);
+  });
+  updateGalleryPricesAndLang();
+}
+
+// ===== Fiyat ve Dil Güncelle =====
+function updateGalleryPricesAndLang(){
+  const currency = currencySelect.value;
+  const lang = langSelect.value;
+  const t = translations[lang];
+
+  document.querySelectorAll('.embed').forEach((embed,index)=>{
+    const p=products[index];
+    let priceValue = p.price;
+    if(currency==='eur') priceValue = p.price*0.93;
+    else if(currency==='try') priceValue = p.price*28;
+    embed.querySelector('.price').textContent = formatPrice(priceValue,currency);
+    embed.querySelector('.desc').textContent = p.desc[lang];
+  });
+
+  if(modal.style.display==='flex'){
+    const i = modalImg.dataset.index;
+    const p = products[i];
+    let priceValue = p.price;
+    if(currency==='eur') priceValue = p.price*0.93;
+    else if(currency==='try') priceValue = p.price*28;
+    modalPrice.textContent = `${t.priceLabel}: ${formatPrice(priceValue,currency)}`;
+    modalBrand.textContent = `${t.brandLabel}: ${p.brand}`;
+    modalSeller.textContent = `${t.sellerLabel}: ${p.seller}`;
+    modalDate.textContent = `${t.dateLabel}: ${new Date().toLocaleDateString(lang)}`;
+    modalDelivery.textContent = `${t.deliveryLabel}: ${p.delivery}`;
+    modalDeliveryDays.textContent = `${t.deliveryDaysLabel}: ${p.deliveryDays} gün`;
+  }
+}
+
+// ===== Modal Aç/Kapat =====
+gallery.addEventListener('click',(e)=>{
+  if(e.target.tagName==='IMG'){
+    const i=parseInt(e.target.dataset.index);
+    const p=products[i];
+    modal.style.display='flex';
+    modalImg.src=p.images[0];
+    modalImg.dataset.index=i;
+    modalName.textContent=p.name;
+    updateGalleryPricesAndLang();
+  }
+});
+modalClose.onclick=()=>{modal.style.display='none';}
+
+// ===== Event Listeners =====
+currencySelect.addEventListener('change',updateGalleryPricesAndLang);
+langSelect.addEventListener('change',updateGalleryPricesAndLang);
+
+// ===== Başlat =====
+renderGallery();
+</script>
+</body>
+</html>
