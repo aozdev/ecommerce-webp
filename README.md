@@ -1,8 +1,3 @@
-Perfect kanka! O zaman bu cümleyi de README’ye ekleyebiliriz. İşte sana **tamamlanmış uzun İngilizce README örneği**, içinde senin istediğin cümle de var:
-
----
-
-````markdown
 # TheSellForBuy Demo
 
 **TheSellForBuy** is a minimalist and modern e-commerce demo website designed to showcase front-end development skills, UI/UX design principles, and interactive features. The project demonstrates a clean, responsive interface that is both user-friendly and visually appealing.  
@@ -36,7 +31,7 @@ Perfect kanka! O zaman bu cümleyi de README’ye ekleyebiliriz. İşte sana **t
 1. Clone this repository:
    ```bash
    git clone https://github.com/aozdev/TheSellForBuy.git
-````
+   ```
 
 2. Open `index.html` in your browser.
 3. Explore the gallery, toggle themes, switch currencies, and change languages.
@@ -60,9 +55,3 @@ This project is provided **as-is** for educational and demonstration purposes. Y
 
 **Suggested License:** MIT License
 
-```
-
----
-
-Bunu da yapayım mı kanka?
-```
