@@ -1,0 +1,222 @@
+/* ====== GENEL ====== */
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TheSellForBuy v0.5</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ====== GENEL ====== */
+body {margin:0;font-family:'Roboto',sans-serif;background-color:#f5f0e6;color:#111;transition:0.3s;}
+body.dark {background-color:#121212;color:#fff;}
+header {position:fixed;top:0;left:0;right:0;height:60px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;background-color:inherit;box-shadow:0 2px 5px rgba(0,0,0,0.2);z-index:1000;}
+header .title {font-weight:500;font-size:22px;letter-spacing:1px;}
+header .controls {display:flex;align-items:center;gap:10px;}
+#clock {font-weight:bold;font-size:16px;}
+button, select {cursor:pointer;}
+#darkModeToggle {font-size:18px;background:none;border:none;transition:transform 0.2s;}
+#darkModeToggle:hover {transform:rotate(20deg);}
+select {padding:4px 8px;border-radius:6px;border:1px solid #111;}
+body.dark select {border:1px solid #fff;color:#fff;}
+/* ====== GALERİ ====== */
+.gallery {margin-top:80px;display:flex;flex-direction:column;align-items:center;gap:20px;padding-bottom:50px;}
+.embed {width:340px;background-color:#1c1c1c;color:#fff;border-radius:12px;overflow:hidden;cursor:pointer;text-align:center;padding:10px;transition:0.3s;}
+body.light .embed {background-color:#e0e0e0;color:#111;}
+.embed:hover {transform:scale(1.02);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.embed .images {display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.embed .images img {width:60px;height:60px;border-radius:6px;object-fit:cover;transition:0.2s;}
+.embed .images img:hover {transform:scale(1.1);}
+.embed .desc {font-size:14px;line-height:1.4;margin-bottom:5px;}
+.embed .price {font-weight:bold;color:#62b357;font-size:16px;}
+/* ====== MODAL ====== */
+.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:2000;padding-top:60px;overflow:auto;}
+.modal-inner {display:flex;justify-content:center;align-items:center;gap:30px;flex-wrap:wrap;padding:20px;min-height:100%;}
+.modal-left img {max-width:400px;max-height:70vh;border-radius:10px;display:block;margin:auto;}
+.modal-right {display:flex;flex-direction:column;gap:10px;color:#fff;max-width:400px;}
+.modal-right h2 {margin:0;font-size:22px;}
+.modal-right .desc {font-size:16px;line-height:1.4;}
+.modal-right .price {font-weight:bold;color:#62b357;font-size:18px;}
+.modal-right .info {font-size:14px;}
+#modalClose {position:absolute;top:20px;right:35px;color:#fff;font-size:40px;font-weight:bold;cursor:pointer;transition:0.3s;}
+#modalClose:hover {color:#ff4444;}
+.modal::-webkit-scrollbar {width:6px;}
+.modal::-webkit-scrollbar-thumb {background-color:rgba(255,255,255,0.3);border-radius:3px;}
+.modal::-webkit-scrollbar-track {background:transparent;}
+/* ====== FOOTER ====== */
+footer {display:flex;justify-content:space-between;flex-wrap:wrap;background-color:#1f1f1f;color:#aaa;padding:20px;gap:10px;margin-top:20px;}
+body.light footer {background-color:#dcdcdc;color:#333;}
+.footer-right {display:flex;align-items:center;gap:15px;}
+.footer-right a {color:#f8f8f8;text-decoration:none;font-weight:500;display:flex;align-items:center;gap:6px;transition:0.3s;}
+.footer-right a:hover {color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body class="dark">
+
+<header>
+<div class="title">TheSellForBuy</div>
+<div class="controls">
+<div id="clock">00:00:00</div>
+<button id="darkModeToggle">🌙</button>
+<select id="currencySelect">
+<option value="usd">$ USD</option>
+<option value="eur">€ EUR</option>
+<option value="try">₺ TRY</option>
+</select>
+<select id="langSelect">
+<option value="tr">🇹🇷 TR</option>
+<option value="en">🇬🇧 EN</option>
+<option value="es">🇪🇸 ES</option>
+<option value="de">🇩🇪 DE</option>
+</select>
+</div>
+</header>
+
+<div class="gallery" id="gallery"></div>
+
+<div id="modal" class="modal">
+<span id="modalClose">&times;</span>
+<div class="modal-inner">
+<div class="modal-left"><img id="modalImg"></div>
+<div class="modal-right">
+<h2 id="modalName"></h2>
+<div id="modalDesc"></div>
+<div class="price" id="modalPrice"></div>
+<div class="info" id="modalBrand"></div>
+<div class="info" id="modalSeller"></div>
+<div class="info" id="modalDate"></div>
+<div class="info" id="modalDelivery"></div>
+<div class="info" id="modalDeliveryDays"></div>
+</div>
+</div>
+</div>
+
+<footer>
+<div>TheSellForBuy Demo Site</div>
+<div class="footer-right">
+<a href="https://discord.com/users/USERNAME" target="_blank">Discord</a>
+<a href="https://github.com/aozdev" target="_blank">GitHub</a>
+</div>
+</footer>
+
+<script>
+// ===== Saat =====
+function updateClock(){
+const now=new Date();
+const h=String(now.getHours()).padStart(2,'0');
+const m=String(now.getMinutes()).padStart(2,'0');
+const s=String(now.getSeconds()).padStart(2,'0');
+document.getElementById('clock').textContent=`${h}:${m}:${s}`;
+}
+setInterval(updateClock,1000);updateClock();
+
+// ===== Dark Mode =====
+document.getElementById('darkModeToggle').addEventListener('click',()=>{
+document.body.classList.toggle('dark');
+document.body.classList.toggle('light');
+document.getElementById('darkModeToggle').textContent=document.body.classList.contains('dark')?'🌙':'☀️';
+});
+
+// ===== Ürün verisi =====
+const products=[
+{name:'Off White Hoodie',desc:'Bu özel hoodie, limited edition Off White koleksiyonundan.',price:250,brand:'OffWhite',seller:'Beymen',delivery:'FedEx Global',deliveryDays:3,images:['https://i.pinimg.com/736x/31/76/57/31765791a92e9a3ff5550947be45e89a.jpg','https://i.pinimg.com/1200x/ee/a2/2a/eea22ae9ee5dba28288b6170942a8cd7.jpg','https://i.pinimg.com/1200x/63/80/37/6380378fd47cab75f429ca932bcd0915.jpg']},
+{name:'Streetwear Hoodie',desc:'Streetwear koleksiyonunun özel hoodie modeli.',price:180,brand:'StreetBrand',seller:'Trendyol',delivery:'Yurtiçi Kargo',deliveryDays:3,images:['https://i.pinimg.com/736x/81/25/aa/8125aa3707566252530a47ca685458cc.jpg','https://i.pinimg.com/736x/e8/63/68/e86368084e649734865063ba58736b69.jpg']},
+{name:'Designer Cap',desc:'Sınırlı sayıda üretilmiş designer şapka.',price:90,brand:'DesignerBrand',seller:'Beymen',delivery:'FedEx Global',deliveryDays:7,images:['https://i.pinimg.com/736x/bf/a5/18/bfa518d13b0c35a09f93f8d3c111eaf2.jpg','https://i.pinimg.com/1200x/91/a5/61/91a5617f6bea6f3edfdc9ecefc819911.jpg']},
+{name:'Luxury Jacket',desc:'Abloh ruhunu taşıyan premium mont.',price:400,brand:'LuxuryBrand',seller:'Trendyol',delivery:'Yurtiçi Kargo',deliveryDays:15,images:['https://i.pinimg.com/736x/a1/22/33/a12233.jpg']},
+{name:'Sneaker Pro',desc:'Spor ve stil bir arada.',price:300,brand:'SneakerBrand',seller:'Beymen',delivery:'FedEx Global',deliveryDays:7,images:['https://i.pinimg.com/736x/b1/22/33/b12233.jpg']},
+{name:'Classic Tee',desc:'Basic ve şık t-shirt.',price:50,brand:'TeeBrand',seller:'Trendyol',delivery:'Yurtiçi Kargo',deliveryDays:3,images:['https://i.pinimg.com/736x/c1/22/33/c12233.jpg']},
+{name:'Designer Pants',desc:'Modern kesimli pantolon.',price:150,brand:'PantsBrand',seller:'Beymen',delivery:'FedEx Global',deliveryDays:15,images:['https://i.pinimg.com/736x/d1/22/33/d12233.jpg']},
+{name:'Hoodie XL',desc:'Oversize hoodie.',price:200,brand:'HoodieBrand',seller:'Trendyol',delivery:'Yurtiçi Kargo',deliveryDays:3,images:['https://i.pinimg.com/736x/e1/22/33/e12233.jpg']},
+{name:'Cap Limited',desc:'Sınırlı sayıda cap.',price:120,brand:'CapBrand',seller:'Beymen',delivery:'FedEx Global',deliveryDays:7,images:['https://i.pinimg.com/736x/f1/22/33/f12233.jpg']},
+{name:'Street Shorts',desc:'Rahat yazlık şort.',price:80,brand:'ShortsBrand',seller:'Trendyol',delivery:'Yurtiçi Kargo',deliveryDays:7,images:['https://i.pinimg.com/736x/g1/22/33/g12233.jpg']}
+];
+
+// ===== Galeri render =====
+const gallery=document.getElementById('gallery');
+const currencySelect=document.getElementById('currencySelect');
+const langSelect=document.getElementById('langSelect');
+
+function renderGallery(){
+gallery.innerHTML='';
+products.forEach((p,index)=>{
+  const embed=document.createElement('div');embed.className='embed';
+  let imgHtml='';
+  for(let i=0;i<Math.min(p.images.length,5);i++){imgHtml+=`<img src="${p.images[i]}" data-index="${index}">`;}
+  embed.innerHTML=`<div class="images">${imgHtml}</div><div class="desc">${p.desc}</div><div class="price"></div>`;
+  gallery.appendChild(embed);
+});
+
+// Döviz ve dil güncelle
+updateGalleryPricesAndLang();
+}
+
+// ===== Döviz ve dil sistemi =====
+function updateGalleryPricesAndLang(){
+const currency=currencySelect.value;
+const lang=langSelect.value;
+
+document.querySelectorAll('.embed').forEach((embed,index)=>{
+  const p=products[index];
+  // Fiyat
+  let price=p.price;
+  if(currency==='eur') price=(p.price*0.93).toFixed(2)+'€';
+  else if(currency==='try') price=(p.price*28).toFixed(2)+'₺';
+  else price='$'+p.price;
+  embed.querySelector('.price').textContent=price;
+  // Açıklama
+  let desc=p.desc;
+  if(lang==='en'){desc=desc.replace('özel','special').replace('koleksiyonundan','collection');}
+  else if(lang==='es'){desc=desc.replace('özel','exclusivo').replace('koleksiyonundan','colección');}
+  else if(lang==='de'){desc=desc.replace('özel','speziell').replace('koleksiyonundan','Kollektion');}
+  else{desc=p.desc;}
+  embed.querySelector('.desc').textContent=desc;
+});
+}
+
+// ===== Modal =====
+const modal=document.getElementById('modal');
+const modalImg=document.getElementById('modalImg');
+const modalName=document.getElementById('modalName');
+const modalDesc=document.getElementById('modalDesc');
+const modalPrice=document.getElementById('modalPrice');
+const modalBrand=document.getElementById('modalBrand');
+const modalSeller=document.getElementById('modalSeller');
+const modalDate=document.getElementById('modalDate');
+const modalDelivery=document.getElementById('modalDelivery');
+const modalDeliveryDays=document.getElementById('modalDeliveryDays');
+const modalClose=document.getElementById('modalClose');
+
+gallery.addEventListener('click',(e)=>{
+if(e.target.tagName==='IMG'){
+const i=parseInt(e.target.dataset.index);
+const p=products[i];
+modal.style.display='flex';
+modalImg.src=p.images[0];
+modalName.textContent=p.name;
+modalDesc.textContent=p.desc;
+let currency=currencySelect.value;
+let price=p.price;
+if(currency==='eur') price=(p.price*0.93).toFixed(2)+'€';
+else if(currency==='try') price=(p.price*28).toFixed(2)+'₺';
+else price='$'+p.price;
+modalPrice.textContent='Fiyat: '+price;
+modalBrand.textContent='Marka: '+p.brand;
+modalSeller.textContent='Satıcı: '+p.seller;
+modalDate.textContent='Eklenme Tarihi: '+new Date().toGMTString();
+modalDelivery.textContent='Teslim Eden: '+p.delivery;
+modalDeliveryDays.textContent='Tahmini Teslim Süresi: '+p.deliveryDays+' gün';
+}
+});
+modalClose.onclick=()=>{modal.style.display='none';}
+
+// Event listeners
+currencySelect.addEventListener('change',updateGalleryPricesAndLang);
+langSelect.addEventListener('change',updateGalleryPricesAndLang);
+
+// İlk render
+renderGallery();
+</script>
+
+</body>
+</html>
+/* ====== GENEL ====== */
